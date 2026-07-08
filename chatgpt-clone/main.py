@@ -1,37 +1,16 @@
 import streamlit as st
-from agents import Agent, Runner, SQLiteSession, WebSearchTool, FileSearchTool
+from agents import Agent, Runner, SQLiteSession, WebSearchTool, FileSearchTool, ImageGenerationTool, CodeInterpreterTool,HostedMCPTool
 from dotenv import load_dotenv
 import asyncio
 from openai import OpenAI
 import base64
+from agents.mcp.server import MCPServerStdio
 
 load_dotenv()
 
 client = OpenAI()
 VECTOR_STORE_ID = "vs_6a38f8c3691881918fe18f6ff64f50d9"
 
-if "agent" not in st.session_state:
-    st.session_state["agent"] = Agent(
-        name="ChatGPT Clone",
-        instructions= """
-        You are a helpful assistant.
-
-        You have access to the following tools:
-            - Web Search Tool: Use this when the user asks a questions that isn't in your training data. Use this tool when the users asks about current or future events, when you think you don't know the answer, try searching for it in the web first.
-            - File Search Tool: Use this tool when the user asks a question about facts related to themselves. Or when they ask questions about specific files.
-        """,
-        tools=[WebSearchTool(
-            user_location={
-                "type": "approximate",
-                "city": "Seoul",
-                "country": "KR",
-                "timezone": "Asia/Seoul"
-            }
-        ),
-        FileSearchTool(vector_store_ids=[VECTOR_STORE_ID], max_num_results=3),
-        ],
-    )
-agent = st.session_state["agent"]
 
 if "session" not in st.session_state: 
     st.session_state["session"] = SQLiteSession("chat-history", "chat-gpt-clone-memory.db")
@@ -56,13 +35,26 @@ async def paint_history():
                         st.write(message["content"][0]["text"].replace("$", "\$"))
         
         if "type" in message:
-            
-            if message["type"] == "web_search_call":
+            message_type = message["type"]
+            if message_type == "web_search_call":
                 with st.chat_message("ai"):    
                     st.write("🔎 Searched the web...")
-            elif message["type"] == "file_search_call":
+            elif message_type == "file_search_call":
                 with st.chat_message("ai"):    
                     st.write("🗂️ Searched the files...")
+            elif message_type == "image_generation_call":
+                with st.chat_message("ai"):    
+                    image = base64.b64decode(message["result"])
+                    st.image(image)
+            elif message_type == "code_interpreter_call":
+                with st.chat_message("ai"):    
+                    st.code(message["code"])
+            elif message_type == "mcp_list_tools":
+                with st.chat_message("ai"):
+                    st.write(f"Listed {message["server_label"]}'s tools")
+            elif message_type == "mcp_call":
+                with st.chat_message("ai"):
+                    st.write(f"Called {message["server_label"]}'s {message["name"]} with args {message["arguments"]}")
 
 asyncio.run(paint_history())
 
@@ -87,6 +79,48 @@ def update_status(status_container, event):
             "🗂️ File search in progress...",
             "running",
         ),
+        "response.image_generation_call.generating": (
+            "🎨 Drawing image...",
+            "running",
+        ),
+        "response.image_generation_call.in_progress": (
+            "🎨 Drawing image...",
+            "running",
+        ),
+        "response.code_interpreter_call_code.done": ("🤖 Run code.", "complete"),
+        "response.code_interpreter_call.completed": ("🤖 Run code.", "complete"),
+        "response.code_interpreter_call.in_progress": (
+            "🤖 Running code...",
+            "running",
+        ),
+        "response.code_interpreter_call.interpreting": (
+            "🤖 Running code...",
+            "running",
+        ),
+        "response.mcp_call.completed": (
+            "⚒️ Called MCP tool",
+            "complete",
+        ),
+        "response.mcp_call.failed": (
+            "⚒️ Error calling MCP tool",
+            "complete",
+        ),
+        "response.mcp_call.in_progress": (
+            "⚒️ Calling MCP tool...",
+            "running",
+        ),
+        "response.mcp_list_tools.completed": (
+            "⚒️ Listed MCP tools",
+            "complete",
+        ),
+        "response.mcp_list_tools.failed": (
+            "⚒️ Error listing MCP tools",
+            "complete",
+        ),
+        "response.mcp_list_tools.in_progress": (
+            "⚒️ Listing MCP tools",
+            "running",
+        ),
         "response.completed": (" ", "complete"),
     }
 
@@ -96,21 +130,100 @@ def update_status(status_container, event):
 
 
 async def run_agent(message):
-    with st.chat_message("ai"):
-        status_container = st.status("⏳", expanded=False)
+    yfinance_server = MCPServerStdio(
+        params = {
+            "command": "uvx",
+            "args": ["mcp-yahoo-finance"],
+        },
+        client_session_timeout_seconds=60,  
+        cache_tools_list =True
+    ) #매번 실헹마다 mcp 서버를 넘겨줘야해서 session cache agent 사용 제거 
+
+    timezone_server = MCPServerStdio(
+        params = {
+            "command": "uvx",
+            "args": ["mcp-server-time", "--local-timezone=Asia/Seoul"]
+        },
+        client_session_timeout_seconds=60,  
+        cache_tools_list =True
+    )
+
+    async with yfinance_server, timezone_server:
+        agent = Agent(
+            mcp_servers=[yfinance_server, timezone_server],
+            name="ChatGPT Clone",
+            instructions= """
+            You are a helpful assistant.
+
+            You have access to the following tools:
+                - Web Search Tool: Use this when the user asks a questions that isn't in your training data. Use this tool when the users asks about current or future events, when you think you don't know the answer, try searching for it in the web first.
+                - File Search Tool: Use this tool when the user asks a question about facts related to themselves. Or when they ask questions about specific files.
+                - Image Generation Tool: Use this tool when the user asks a question about images.
+                - Code Interpreter Tool: CRITICAL: You MUST use this tool whenever the user requests any mathematical calculations, data analysis, portfolio simulations, or code execution. Do not attempt to calculate complex math or simulate financial portfolios in text; always write and run code to get the exact numbers.
+            """,
+            tools=[WebSearchTool(
+                user_location={
+                    "type": "approximate",
+                    "city": "Seoul",
+                    "country": "KR",
+                    "timezone": "Asia/Seoul"
+                }
+            ),
+            FileSearchTool(vector_store_ids=[VECTOR_STORE_ID], max_num_results=3),
+            ImageGenerationTool(
+                tool_config= {
+                    "type": "image_generation",
+                    "quality": "high",
+                    "output_format": "jpeg",
+                    "partial_images": 1 
+                }
+            ),
+            CodeInterpreterTool(
+                tool_config = {
+                    "type": "code_interpreter",
+                    "container": {
+                        "type": "auto"
+                    }
+                }
+            ),
+            HostedMCPTool(
+                tool_config = {
+                    "server_url": "https://mcp.context7.com/mcp",
+                    "type": "mcp",
+                    "server_label": "Context7",
+                    "server_description": "Use this to get the docs from software projects.",
+                    "require_approval": "never"
+                }
+            )
+            ],
+        )
+
+        with st.chat_message("ai"):
+            status_container = st.status("⏳", expanded=False)
+
+            code_placeholder = st.empty()
+            image_placeholder = st.empty()
+            text_placeholder = st.empty()
+            code_response = ""
+            response = "" 
+            stream = Runner.run_streamed(agent, message, session=session)
         
+            async for event in stream.stream_events():
+                if event.type == "raw_response_event":
+                    update_status(status_container, event.data.type)
 
-        text_placeholder = st.empty()
-        response = "" 
-        stream = Runner.run_streamed(agent, message, session=session)
-    
-        async for event in stream.stream_events():
-            if event.type == "raw_response_event":
-                update_status(status_container, event.data.type)
+                    if event.data.type == "response.output_text.delta":
+                        response += event.data.delta 
+                        text_placeholder.write(response.replace("$", "\$"))
 
-                if event.data.type == "response.output_text.delta":
-                    response += event.data.delta 
-                    text_placeholder.write(response.replace("$", "\$"))
+                    elif event.data.type == "response.image_generation_call.partial_image":
+                        image= base64.b64decode(event.data.partial_image_b64)
+                        image_placeholder.image(image)
+
+                    elif event.data.type == "response.code_interpreter_call_code.delta":
+                        code_response += event.data.delta
+                        code_placeholder.code(code_response)
+
 
 prompt = st.chat_input("Write a message for your assistant.", accept_file=True, file_type=["txt", "jpg", "jpeg", "png"])
 if prompt: 
