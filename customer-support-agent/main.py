@@ -23,7 +23,7 @@ user_account_ctx = UserAccountContext(
 )
 
 if "session" not in st.session_state: 
-    st.session_state["session"] = SQLiteSession("chat-history", "chat-gpt-clone-memory.db")
+    st.session_state["session"] = SQLiteSession("chat-history", "customer-support-memory.db")
 
 session = st.session_state["session"]
 

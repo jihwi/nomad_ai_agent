@@ -16,12 +16,6 @@ load_dotenv()
 
 client = OpenAI()
 
-@function_tool 
-def get_user_tier(wrapper: RunContextWrapper[UserAccountContext]):
-    return (
-        f"the user {wrapper.customer_id} has a {wrapper.tier} account."
-    )
-
 user_account_ctx = UserAccountContext(
     customer_id = 1,
     name= "nico",
@@ -29,7 +23,7 @@ user_account_ctx = UserAccountContext(
 )
 
 if "session" not in st.session_state: 
-    st.session_state["session"] = SQLiteSession("chat-history", "chat-gpt-clone-memory.db")
+    st.session_state["session"] = SQLiteSession("chat-history", "customer-support-memory.db")
 
 session = st.session_state["session"]
 
@@ -41,7 +35,7 @@ def convert_audio(audio_input):
     audio_data = audio_input.getvalue()
 
     with wave.open(io.BytesIO(audio_data), "rb") as wave_file: 
-        audio_frames = wave_file.readfreames(-1)
+        audio_frames = wave_file.readframes(-1)
 
     return np.frombuffer(
         audio_frames,
@@ -63,7 +57,7 @@ async def run_agent(audio_input):
                 result = await pipeline.run(audio)
 
                 player = sd.OutputStream(
-                    saplerate=24000,
+                    samplerate=24000,
                     channels=1,
                     dtype=np.int16
                 )
