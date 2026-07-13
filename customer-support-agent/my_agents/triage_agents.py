@@ -1,5 +1,13 @@
-from agents import Agent, RunContextWrapper, input_guardrail, Runner, GuardrailFunctionOutput
-from model import UserAccountContext, InputGuardrailOutput
+from agents import Agent, RunContextWrapper, input_guardrail, Runner, GuardrailFunctionOutput, handoff
+from model import UserAccountContext, InputGuardrailOutput, HandoffData
+from my_agents.account_agent import account_agent
+from my_agents.billing_agent import billing_agent
+from my_agents.order_agent import order_agent
+from my_agents.technical_agent import technical_agent
+
+from agents.extensions import handoff_filters
+import streamlit as st 
+from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX #권장사항 
 
 input_guardrail_agent = Agent(
     name= "Input Guardrail Agent",
@@ -31,6 +39,8 @@ def dynamic_triage_agnet_intructions(
     agent: Agent[UserAccountContext]
 ):
     return f"""
+    {RECOMMENDED_PROMPT_PREFIX}
+
     You are a customer support agent. You ONLY help customers with their questions about their User Account, Billing, Orders, or Technical Support.
     You call customers by their name.
     
@@ -83,10 +93,39 @@ def dynamic_triage_agnet_intructions(
     - Unclear issues: Ask 1-2 clarifying questions before routing
     """
 
+def handle_handoff(wrapper: RunContextWrapper[UserAccountContext], input_data: HandoffData):
+    with st.sidebar: 
+        st.write(f"""
+            Handing off to {input_data.to_agent_name}
+            Reason: {input_data.reason}
+            Issue Type: {input_data.issue_type}
+            Description: {input_data.issue_description}
+        """)
+
+def make_handoff(agent): 
+    return handoff(
+        agent=agent, 
+        on_handoff=handle_handoff, #callback 함수 개념 
+        input_type=HandoffData,
+        input_filter=handoff_filters.remove_all_tools,
+    )
+
 triage_agent = Agent(
     name="Triage Agent",
     instructions = dynamic_triage_agnet_intructions,
     input_guardrails=[
         off_topic_guardrail
+    ],
+    # tools= [ # tool 형태 agent를 사용할경우
+    #     technical_agent.as_tool(
+    #         tool_name="Technical Help Tool",
+    #         tool_description="Use this when the suer needs tech support."
+    #     )
+    # ]
+    handoffs=[
+        make_handoff(technical_agent),
+        make_handoff(billing_agent),
+        make_handoff(account_agent),
+        make_handoff(order_agent),
     ]
 )

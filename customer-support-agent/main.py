@@ -1,5 +1,5 @@
 import streamlit as st
-from agents import Agent, Runner, SQLiteSession, function_tool, RunContextWrapper, InputGuardrailTripwireTriggered
+from agents import Agent, Runner, SQLiteSession, function_tool, RunContextWrapper, InputGuardrailTripwireTriggered, OutputGuardrailTripwireTriggered
 from dotenv import load_dotenv
 import asyncio
 from openai import OpenAI
@@ -27,6 +27,10 @@ if "session" not in st.session_state:
 
 session = st.session_state["session"]
 
+if "agent" not in st.session_state: 
+    st.session_state["agent"] = triage_agent
+
+
 async def paint_history():
     messages = await session.get_items()
     for message in messages: 
@@ -47,17 +51,30 @@ async def run_agent(message):
    with st.chat_message("ai"):
             text_placeholder = st.empty()
             response = ""
+
+            st.session_state["text_placeholder"] = text_placeholder
             
             try: 
-                stream = Runner.run_streamed(triage_agent, message, session=session, context=user_account_ctx)  #여기에 context를 넘겨주면 그 내부 모든 tool에 의존성주입된다. 
+                stream = Runner.run_streamed(st.session_state["agent"], message, session=session, context=user_account_ctx)  #여기에 context를 넘겨주면 그 내부 모든 tool에 의존성주입된다. 
             
                 async for event in stream.stream_events():
                     if event.type == "raw_response_event":
                         if event.data.type == "response.output_text.delta":
                             response += event.data.delta 
                             text_placeholder.write(response.replace("$", "\$"))
+                    elif event.type == "agent_updated_stream_event": 
+                        if (st.session_state["agent"] != event.new_agent): 
+                            st.write(f"🤖 transfer from {st.session_state["agent"].name} to {event.new_agent.name}")
+                            st.session_state["agent"] = event.new_agent; 
+                            text_placeholder = st.empty()
+                            st.session_state["text_placeholder"] = text_placeholder
+                            response = ""
+
             except InputGuardrailTripwireTriggered : 
                 st.write("I can't help you with that.")
+            except OutputGuardrailTripwireTriggered: 
+                st.write("Cant show you that answer.")
+                st.session_state["text_placeholder"].empty()
 
 
 
