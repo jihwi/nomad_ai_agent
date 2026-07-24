@@ -1,0 +1,307 @@
+{
+  "eval_set_id": "tokyo",
+  "name": "tokyo",
+  "eval_cases": [
+    {
+      "eval_id": "i_want_to_go_berlin",
+      "conversation": [
+        {
+          "invocation_id": "e-3355b5c4-1e79-4cc7-af77-760f0c414558",
+          "user_content": {
+            "parts": [
+              {
+                "text": "i want to go berlin"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "When planning your trip to Berlin, here's some useful information for you:\n\n### Current Weather in Berlin\n- **Temperature:** 22°C\n- **Condition:** Partly cloudy\n- **Humidity:** 65%\n- **Wind:** 12 km/h\n- **Forecast:** Mild weather with occasional clouds expected throughout the day.\n\n### Local Attractions in Berlin\n- **City Center:** Main downtown area with a rating of 4.2.\n- **Historical Museum:** Offers insights into local history and culture, rated 4.3.\n- **Central Park:** A beautiful public park, rated 4.1.\n- **Old Town:** Historic district with traditional architecture, rated 4.4.\n- **Local Market:** Traditional marketplace to explore local goods, rated 4.0.\n\n### Currency Exchange\n- **Exchange Rate:** 1 USD = 0.92 EUR\n\nFeel free to let me know if you need more information or any other help with your travel plans!"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "TravelAdvisorAgent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_CGpBy9tKBR0JK5jm6fGcjzc7",
+                        "args": {
+                          "location": "Berlin"
+                        },
+                        "name": "get_weather"
+                      }
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_emeAYFFwBPv1JpjQ8X8vieIU",
+                        "args": {
+                          "location": "Berlin"
+                        },
+                        "name": "get_local_attractions"
+                      }
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_dAAc88nEFyqVysYA0Av6HNhQ",
+                        "args": {
+                          "from_currency": "USD",
+                          "to_currency": "EUR",
+                          "amount": 1
+                        },
+                        "name": "get_exchange_rate"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "TravelAdvisorAgent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_CGpBy9tKBR0JK5jm6fGcjzc7",
+                        "name": "get_weather",
+                        "response": {
+                          "location": "Berlin",
+                          "temperature": "22°C",
+                          "condition": "Partly cloudy",
+                          "humidity": "65%",
+                          "wind": "12 km/h",
+                          "forecast": "Mild weather with occasional clouds expected throughout the day"
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_emeAYFFwBPv1JpjQ8X8vieIU",
+                        "name": "get_local_attractions",
+                        "response": {
+                          "location": "Berlin",
+                          "category": "all",
+                          "attractions": [
+                            {
+                              "name": "City Center",
+                              "type": "area",
+                              "rating": 4.2,
+                              "description": "Main downtown area"
+                            },
+                            {
+                              "name": "Historical Museum",
+                              "type": "museum",
+                              "rating": 4.3,
+                              "description": "Local history and culture"
+                            },
+                            {
+                              "name": "Central Park",
+                              "type": "park",
+                              "rating": 4.1,
+                              "description": "Main public park"
+                            },
+                            {
+                              "name": "Old Town",
+                              "type": "district",
+                              "rating": 4.4,
+                              "description": "Historic district with traditional architecture"
+                            },
+                            {
+                              "name": "Local Market",
+                              "type": "market",
+                              "rating": 4.0,
+                              "description": "Traditional local marketplace"
+                            }
+                          ],
+                          "total_count": 5
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_dAAc88nEFyqVysYA0Av6HNhQ",
+                        "name": "get_exchange_rate",
+                        "response": {
+                          "from_currency": "USD",
+                          "to_currency": "EUR",
+                          "amount": 1,
+                          "exchange_rate": 0.92,
+                          "converted_amount": 0.92,
+                          "timestamp": "2024-03-15 10:30:00 UTC"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1784865892.775389
+        }
+      ],
+      "session_input": {
+        "app_name": "travel_advisor_agent",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1784865904.850622
+    },
+    {
+      "eval_id": "i_want_to_go_korea_seoul",
+      "conversation": [
+        {
+          "invocation_id": "e-82e29cea-5564-421b-a3b8-b612abf05c05",
+          "user_content": {
+            "parts": [
+              {
+                "text": "i want to go korea, seoul"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "### Weather in Seoul, South Korea\n- **Current Temperature**: 22°C\n- **Condition**: Partly cloudy\n- **Humidity**: 65%\n- **Wind**: 12 km/h\n- **Forecast**: Mild weather with occasional clouds expected throughout the day\n\n### Popular Attractions in Seoul\n1. **City Center**: Main downtown area. A vibrant hub full of shops, restaurants, and entertainment (Rating: 4.2).\n2. **Historical Museum**: Offers insights into the local history and culture. A must-visit for history enthusiasts (Rating: 4.3).\n3. **Central Park**: The main public park, great for a leisurely stroll or a picnic (Rating: 4.1).\n4. **Old Town**: Explore the historic district with traditional architecture and experience the charm of old Seoul (Rating: 4.4).\n5. **Local Market**: Visit the traditional marketplace for a taste of local flavors and handmade goods (Rating: 4.0).\n\n### Currency Exchange\n- **Exchange Rate**: 1 USD = 1,325 KRW\n\nSeoul is a bustling city steeped in history with modern attractions and a rich cultural scene. Be sure to enjoy the blend of contemporary life and traditional Korean experiences. If you need further assistance with planning, feel free to ask!"
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "invocation_events": [
+              {
+                "author": "TravelAdvisorAgent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_call": {
+                        "id": "call_0vWGLY95VQ1Xf3ajjM9uBb9m",
+                        "args": {
+                          "location": "Seoul, South Korea"
+                        },
+                        "name": "get_weather"
+                      }
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_1fn9TmVUBIu5LAkKunc32Dm0",
+                        "args": {
+                          "location": "Seoul, South Korea"
+                        },
+                        "name": "get_local_attractions"
+                      }
+                    },
+                    {
+                      "function_call": {
+                        "id": "call_mlnu8A7147Oup5w6FO5Chfi7",
+                        "args": {
+                          "from_currency": "USD",
+                          "to_currency": "KRW",
+                          "amount": 1
+                        },
+                        "name": "get_exchange_rate"
+                      }
+                    }
+                  ],
+                  "role": "model"
+                }
+              },
+              {
+                "author": "TravelAdvisorAgent",
+                "content": {
+                  "parts": [
+                    {
+                      "function_response": {
+                        "id": "call_0vWGLY95VQ1Xf3ajjM9uBb9m",
+                        "name": "get_weather",
+                        "response": {
+                          "location": "Seoul, South Korea",
+                          "temperature": "22°C",
+                          "condition": "Partly cloudy",
+                          "humidity": "65%",
+                          "wind": "12 km/h",
+                          "forecast": "Mild weather with occasional clouds expected throughout the day"
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_1fn9TmVUBIu5LAkKunc32Dm0",
+                        "name": "get_local_attractions",
+                        "response": {
+                          "location": "Seoul, South Korea",
+                          "category": "all",
+                          "attractions": [
+                            {
+                              "name": "City Center",
+                              "type": "area",
+                              "rating": 4.2,
+                              "description": "Main downtown area"
+                            },
+                            {
+                              "name": "Historical Museum",
+                              "type": "museum",
+                              "rating": 4.3,
+                              "description": "Local history and culture"
+                            },
+                            {
+                              "name": "Central Park",
+                              "type": "park",
+                              "rating": 4.1,
+                              "description": "Main public park"
+                            },
+                            {
+                              "name": "Old Town",
+                              "type": "district",
+                              "rating": 4.4,
+                              "description": "Historic district with traditional architecture"
+                            },
+                            {
+                              "name": "Local Market",
+                              "type": "market",
+                              "rating": 4.0,
+                              "description": "Traditional local marketplace"
+                            }
+                          ],
+                          "total_count": 5
+                        }
+                      }
+                    },
+                    {
+                      "function_response": {
+                        "id": "call_mlnu8A7147Oup5w6FO5Chfi7",
+                        "name": "get_exchange_rate",
+                        "response": {
+                          "from_currency": "USD",
+                          "to_currency": "KRW",
+                          "amount": 1,
+                          "exchange_rate": 1325.0,
+                          "converted_amount": 1325.0,
+                          "timestamp": "2024-03-15 10:30:00 UTC"
+                        }
+                      }
+                    }
+                  ],
+                  "role": "user"
+                }
+              }
+            ]
+          },
+          "creation_timestamp": 1784866350.167964
+        }
+      ],
+      "session_input": {
+        "app_name": "travel_advisor_agent",
+        "user_id": "user"
+      },
+      "creation_timestamp": 1784866413.450062
+    }
+  ],
+  "creation_timestamp": 1784865853.7349918
+}
